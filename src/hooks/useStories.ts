@@ -4,7 +4,7 @@ import {
   getNewStoryIds,
   getStoryById,
   Story,
-} from "../../api/Endpoints";
+} from "../api/Endpoints";
 
 export function useStoryIds(type: "top" | "new") {
   return useQuery({

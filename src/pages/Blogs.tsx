@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStoryIds, useStoryDetails } from "../features/stories/useStories";
+import { useStoryIds, useStoryDetails } from "../hooks/useStories";
 
 const PAGE_SIZE = 10;
 
