@@ -7,21 +7,16 @@ export default function PageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#F6F7FB" }}>
-      <Container maxWidth={false} sx={{ px: 3, py: 3 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 3,
-            border: "1px solid #E6E8F0",
-            backgroundColor: "#FDFDFE",
-            minHeight: "calc(100vh - 72px - 48px)",
-            p: 3,
-          }}
-        >
-          {children}
-        </Paper>
-      </Container>
-    </Box>
+    <Paper
+      elevation={0}
+      sx={{
+        border: "1px solid #E6E8F0",
+        backgroundColor: "grey.50",
+        minHeight: "calc(100vh - 72px - 48px)",
+        px: { xs: 2, md: 3 },
+      }}
+    >
+      {children}
+    </Paper>
   );
 }

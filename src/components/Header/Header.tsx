@@ -73,7 +73,21 @@ const Header: React.FC = () => {
         </Stack>
 
         {/* Right */}
-        <Box minWidth={120} display="flex" justifyContent="flex-end">
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="outlined"
+            sx={{
+              height: 34,
+              borderRadius: "10px",
+              textTransform: "none",
+              fontSize: 12,
+              fontWeight: 700,
+              borderColor: "#E6E8F0",
+              color: "#111827",
+            }}
+          >
+            Submit
+          </Button>
           <Button
             variant="outlined"
             sx={{
@@ -88,7 +102,7 @@ const Header: React.FC = () => {
           >
             Login
           </Button>
-        </Box>
+        </Stack>
       </Toolbar>
     </AppBar>
   );
