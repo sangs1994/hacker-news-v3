@@ -38,7 +38,7 @@ const Header: React.FC = () => {
           </Box>
 
           <Stack direction="row" spacing={1} alignItems="baseline">
-            <Typography fontSize={20} fontWeight={800} color="#6B7280">
+            <Typography fontSize={20} fontWeight={800} color="#08090b">
               Hacker News
             </Typography>
             <Typography fontSize={12} color="#6B7280">
