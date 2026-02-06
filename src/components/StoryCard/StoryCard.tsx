@@ -9,9 +9,9 @@ import {
   Button,
   Chip,
 } from "@mui/material";
-import type { HNStory } from "../../../types/index";
-import { hostFromUrl } from "../utils/url";
-import { timeAgo } from "../utils/time";
+import type { HNStory } from "../../types/index";
+import { hostFromUrl } from "../../features/news/utils/url";
+import { timeAgo } from "../../features/news/utils/time";
 
 type Props = {
   story: HNStory;

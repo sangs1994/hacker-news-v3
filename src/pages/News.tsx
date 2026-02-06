@@ -13,10 +13,10 @@ import type { FeedKind, TimeRange, HNStory } from "../types/index";
 import { withinRange } from "../features/news/utils/filters";
 
 import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
-import StoryCard from "../features/news/components/StoryCard";
+import StoryCard from "../components/StoryCard/StoryCard";
 import BestPicks from "../features/news/components/BestPicks";
 import CommentsDialog from "../features/news/components/CommentsDialog";
-import { StoriesSkeleton } from "../features/news/components/BlogSkeletons";
+import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
 import { useStories } from "../features/news/hooks/useStories";
 import { useBestPicks } from "../features/news/hooks/useBestPicks";
@@ -25,7 +25,7 @@ export default function NewsPage() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
-  const [feedKind, setFeedKind] = React.useState<FeedKind>("top");
+  const [feedKind, setFeedKind] = React.useState<FeedKind>("new");
   const [range, setRange] = React.useState<TimeRange>("1d");
   const [search, setSearch] = React.useState("");
 
@@ -60,12 +60,12 @@ export default function NewsPage() {
   return (
     <Box
       sx={{
-        width: "100%", // ✅ important
+        width: "100%",
         bgcolor: "background.paper",
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 3,
-        px: { xs: 2, md: 3 }, // inner padding
+        px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         boxSizing: "border-box",
         marginTop: 3,
