@@ -2,6 +2,9 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+# Figma Design
+https://www.figma.com/design/U22BuMgo20qGB9cKOjwEDx/Hacker-Rank-Revamp?node-id=0-1&p=f&t=LEhxkYYevvdkRuR2-0
+
 ## Available Scripts
 
 In the project directory, you can run:
