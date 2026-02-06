@@ -9,19 +9,19 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
-import type { FeedKind, TimeRange, HNStory } from "../../types/index";
-import { withinRange } from "./utils/filters";
+import type { FeedKind, TimeRange, HNStory } from "../types/index";
+import { withinRange } from "../features/news/utils/filters";
 
-import BlogFiltersBar from "./components/BlogFiltersBar";
-import StoryCard from "./components/StoryCard";
-import BestPicks from "./components/BestPicks";
-import CommentsDialog from "./components/CommentsDialog";
-import { StoriesSkeleton } from "./components/BlogSkeletons";
+import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
+import StoryCard from "../features/news/components/StoryCard";
+import BestPicks from "../features/news/components/BestPicks";
+import CommentsDialog from "../features/news/components/CommentsDialog";
+import { StoriesSkeleton } from "../features/news/components/BlogSkeletons";
 
-import { useStories } from "./hooks/useStories";
-import { useBestPicks } from "./hooks/useBestPicks";
+import { useStories } from "../features/news/hooks/useStories";
+import { useBestPicks } from "../features/news/hooks/useBestPicks";
 
-export default function BlogPage() {
+export default function NewsPage() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 

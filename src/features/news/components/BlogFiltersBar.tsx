@@ -49,8 +49,8 @@ export default function BlogFiltersBar({
           },
         }}
       >
-        <Tab value="top" label="Top" />
         <Tab value="new" label="New" />
+        <Tab value="top" label="Top" />
       </Tabs>
 
       <TextField

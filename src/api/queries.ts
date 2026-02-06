@@ -48,7 +48,5 @@ export async function getTopLevelComments(
 }
 
 export async function getBestPicks(): Promise<HNStory[]> {
-  // temporary: reuse top stories
-  return getStories("top", 5);
-  // later: replace with your own best picks endpoint
+  return getStories("best", 5);
 }

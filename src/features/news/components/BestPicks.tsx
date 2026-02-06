@@ -25,15 +25,12 @@ function BestPickCard({ item }: { item: HNStory }) {
           {item.title}
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-          {hostFromUrl(item.url)}
-        </Typography>
-
         <Typography
           variant="caption"
           color="text.secondary"
           sx={{ mt: 1, display: "block" }}
         >
+          {hostFromUrl(item.url)}
           {item.score ?? 0} points •{" "}
           {new Date(item.time * 1000).toLocaleDateString()}
         </Typography>

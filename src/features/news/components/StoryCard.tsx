@@ -38,17 +38,17 @@ export default function StoryCard({ story, index, onOpenComments }: Props) {
             </Typography>
           </Stack>
 
-          {/* Optional description placeholder */}
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Short excerpt / summary can be added here (optional).
-          </Typography>
-
           <Stack
             direction="row"
             spacing={1}
             alignItems="center"
             sx={{ mt: 1.25 }}
           >
+            {typeof story.score === "number" && (
+              <Typography variant="caption" color="text.secondary">
+                {story.score} points
+              </Typography>
+            )}
             <Typography variant="caption" color="text.secondary">
               by {story.by} • {timeAgo(story.time)}
             </Typography>
@@ -61,28 +61,8 @@ export default function StoryCard({ story, index, onOpenComments }: Props) {
             >
               Comments ({story.descendants ?? 0})
             </Button>
-
-            {typeof story.score === "number" && (
-              <Chip
-                size="small"
-                label={`${story.score} points`}
-                sx={{ ml: "auto", borderRadius: 2 }}
-                variant="outlined"
-              />
-            )}
           </Stack>
         </Box>
-
-        {/* Placeholder image block – since HN doesn’t provide images */}
-        <CardMedia
-          sx={{
-            width: 150,
-            height: 86,
-            borderRadius: 2,
-            bgcolor: "grey.200",
-            flexShrink: 0,
-          }}
-        />
       </CardContent>
     </Card>
   );

@@ -2,10 +2,10 @@ import React from "react";
 import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
 import { NavLink } from "react-router-dom";
 
-export type HeaderTab = "blogs" | "ask" | "show" | "jobs";
+export type HeaderTab = "news" | "ask" | "show" | "jobs";
 
 const NAV_TABS: { label: string; path: HeaderTab }[] = [
-  { label: "Blogs", path: "blogs" },
+  { label: "News", path: "news" },
   { label: "Ask", path: "ask" },
   { label: "Show", path: "show" },
   { label: "Jobs", path: "jobs" },
