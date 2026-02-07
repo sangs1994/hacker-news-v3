@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Button, Stack, Typography, useMediaQuery } from "@mui/material";
+import { Box, Stack, Typography, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 import type { FeedKind, TimeRange, HNStory } from "../types/index";
@@ -11,8 +11,8 @@ import BestPicks from "../features/news/components/BestPicks";
 import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
-import { useStories } from "../hooks/useStories";
 import { useBestPicks } from "../hooks/useBestPicks";
+import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 
 export default function NewsPage() {
   const theme = useTheme();
@@ -25,30 +25,63 @@ export default function NewsPage() {
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [activeStory, setActiveStory] = React.useState<HNStory | null>(null);
 
-  const storiesQuery = useStories(feedKind, 30);
+  const storiesQuery = useStoriesInfinite(feedKind);
   const bestPicksQuery = useBestPicks();
 
+  // ✅ flatten infinite pages into a single list
+  const allStories = React.useMemo<HNStory[]>(() => {
+    return storiesQuery.data?.pages.flatMap((p) => p.stories) ?? [];
+  }, [storiesQuery.data]);
+
   const filteredStories = React.useMemo(() => {
-    const list = storiesQuery.data ?? [];
-    return list
+    const q = search.trim().toLowerCase();
+
+    return allStories
       .filter((s) => withinRange(s.time, range))
-      .filter((s) => {
-        if (!search.trim()) return true;
-        return s.title.toLowerCase().includes(search.trim().toLowerCase());
-      });
-  }, [storiesQuery.data, range, search]);
+      .filter((s) => (q ? s.title.toLowerCase().includes(q) : true));
+  }, [allStories, range, search]);
 
-  const openComments = (storyId: number) => {
-    const story =
-      (storiesQuery.data ?? []).find((s) => s.id === storyId) ?? null;
-    setActiveStory(story);
-    setCommentsOpen(true);
-  };
+  const openComments = React.useCallback(
+    (storyId: number) => {
+      const story = allStories.find((s) => s.id === storyId) ?? null;
+      setActiveStory(story);
+      setCommentsOpen(true);
+    },
+    [allStories],
+  );
 
-  const closeComments = () => {
+  const closeComments = React.useCallback(() => {
     setCommentsOpen(false);
     setActiveStory(null);
-  };
+  }, []);
+
+  // ✅ sentinel for infinite scroll (same behavior as Show)
+  const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          storiesQuery.hasNextPage &&
+          !storiesQuery.isFetchingNextPage
+        ) {
+          storiesQuery.fetchNextPage();
+        }
+      },
+      { rootMargin: "600px" },
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [
+    storiesQuery.fetchNextPage,
+    storiesQuery.hasNextPage,
+    storiesQuery.isFetchingNextPage,
+  ]);
 
   return (
     <Box
@@ -61,7 +94,7 @@ export default function NewsPage() {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         boxSizing: "border-box",
-        marginTop: 3,
+        mt: 3,
       }}
     >
       <Stack
@@ -103,12 +136,11 @@ export default function NewsPage() {
                 </Typography>
               )}
 
-              <Button
-                variant="outlined"
-                sx={{ alignSelf: "center", borderRadius: 2 }}
-              >
-                Load more
-              </Button>
+              {/* ✅ sentinel */}
+              <div ref={sentinelRef} />
+
+              {/* ✅ loading more */}
+              {storiesQuery.isFetchingNextPage && <StoriesSkeleton count={3} />}
             </Stack>
           )}
         </Box>
@@ -122,6 +154,7 @@ export default function NewsPage() {
           />
         )}
       </Stack>
+
       <CommentsDialog
         open={commentsOpen}
         story={activeStory}
