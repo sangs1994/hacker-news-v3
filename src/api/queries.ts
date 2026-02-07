@@ -13,6 +13,14 @@ export async function getStoryIds(kind: FeedKind): Promise<number[]> {
     case "best":
       return hnGet(hnEndpoints.bestStories);
 
+    case "show":
+      return hnGet<number[]>(hnEndpoints.showStories);
+
+    case "ask":
+      return hnGet<number[]>(hnEndpoints.askStories);
+    case "job":
+      return hnGet<number[]>(hnEndpoints.jobStories);
+
     default:
       return [];
   }

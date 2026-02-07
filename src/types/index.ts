@@ -1,4 +1,4 @@
-export type FeedKind = "top" | "new" | "best";
+export type FeedKind = "top" | "new" | "best" | "show" | "ask" | "job";
 export type TimeRange = "1d" | "1m" | "1y";
 
 export type HNStory = {

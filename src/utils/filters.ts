@@ -1,4 +1,4 @@
-import type { TimeRange } from "../../../types/index";
+import type { TimeRange } from "../types/index";
 
 export function withinRange(unixSeconds: number, range: TimeRange): boolean {
   const ageMs = Date.now() - unixSeconds * 1000;

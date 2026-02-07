@@ -1,16 +1,9 @@
 import * as React from "react";
-import {
-  Box,
-  Button,
-  Container,
-  Stack,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Button, Stack, Typography, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 import type { FeedKind, TimeRange, HNStory } from "../types/index";
-import { withinRange } from "../features/news/utils/filters";
+import { withinRange } from "../utils/filters";
 
 import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
 import StoryCard from "../components/StoryCard/StoryCard";
@@ -18,8 +11,8 @@ import BestPicks from "../features/news/components/BestPicks";
 import CommentsDialog from "../features/news/components/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
-import { useStories } from "../features/news/hooks/useStories";
-import { useBestPicks } from "../features/news/hooks/useBestPicks";
+import { useStories } from "../hooks/useStories";
+import { useBestPicks } from "../hooks/useBestPicks";
 
 export default function NewsPage() {
   const theme = useTheme();

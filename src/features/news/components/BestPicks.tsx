@@ -9,7 +9,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import type { HNStory } from "../../../types/index";
-import { hostFromUrl } from "../utils/url";
+import { hostFromUrl } from "../../../utils/url";
 
 type Props = {
   isLoading: boolean;

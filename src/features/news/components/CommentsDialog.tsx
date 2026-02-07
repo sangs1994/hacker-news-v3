@@ -16,9 +16,9 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useTheme } from "@mui/material/styles";
 import type { HNStory } from "../../../types/index";
-import { hostFromUrl } from "../utils/url";
-import { timeAgo } from "../utils/time";
-import { useComments } from "../hooks/useComments";
+import { hostFromUrl } from "../../../utils/url";
+import { timeAgo } from "../../../utils/time";
+import { useComments } from "../../../hooks/useComments";
 
 /**
  * NOTE: HN comment text is HTML. In production, sanitize it.
