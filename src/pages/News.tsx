@@ -8,7 +8,7 @@ import { withinRange } from "../utils/filters";
 import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
 import StoryCard from "../components/StoryCard/StoryCard";
 import BestPicks from "../features/news/components/BestPicks";
-import CommentsDialog from "../features/news/components/CommentsDialog";
+import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
 import { useStories } from "../hooks/useStories";
