@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Box, Typography, Link } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Link,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 
 import StoryCard from "../components/StoryCard/StoryCard";
@@ -8,9 +14,13 @@ import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 import { HNStory } from "../types";
 
+type SortOrder = "latest" | "oldest";
+
 export default function AskPage() {
   const [params] = useSearchParams();
   const query = (params.get("q") ?? "").trim().toLowerCase();
+
+  const [sort, setSort] = React.useState<SortOrder>("latest");
 
   const {
     data,
@@ -35,11 +45,23 @@ export default function AskPage() {
     });
   }, [stories, query]);
 
+  const visibleStories = React.useMemo(() => {
+    if (sort === "latest") return filteredStories;
+
+    // Oldest first (based on HN "time" unix timestamp)
+    return [...filteredStories].sort((a, b) => {
+      const ta = a.time ?? 0;
+      const tb = b.time ?? 0;
+      return ta - tb;
+    });
+  }, [filteredStories, sort]);
+
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [activeStory, setActiveStory] = React.useState<HNStory | null>(null);
 
   const openComments = React.useCallback(
     (storyId: number) => {
+      // IMPORTANT: use the full "stories" list so comments still work even if filtered/sorted
       const story = stories.find((s) => s.id === storyId) ?? null;
       setActiveStory(story);
       setCommentsOpen(true);
@@ -73,9 +95,32 @@ export default function AskPage() {
 
   return (
     <Box sx={{ px: { xs: 2, md: 3 }, py: 3 }}>
-      <Typography variant="h5" sx={{ fontWeight: 800, mb: 2 }}>
-        Ask HN
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: { xs: "flex-start", sm: "center" },
+          justifyContent: "space-between",
+          gap: 2,
+          flexDirection: { xs: "column", sm: "row" },
+          mb: 2,
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          Ask HN
+        </Typography>
+
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={sort}
+          onChange={(_, next) => {
+            if (next) setSort(next);
+          }}
+        >
+          <ToggleButton value="latest">Latest</ToggleButton>
+          <ToggleButton value="oldest">Oldest</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
       {/* Info banner */}
       <Box
@@ -126,7 +171,7 @@ export default function AskPage() {
 
       {!isLoading && !isError && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {filteredStories.map((story, i) => (
+          {visibleStories.map((story, i) => (
             <StoryCard
               key={story.id}
               story={story}

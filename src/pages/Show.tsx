@@ -1,5 +1,12 @@
 import * as React from "react";
-import { Container, Box, Typography, Link } from "@mui/material";
+import {
+  Container,
+  Box,
+  Typography,
+  Link,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 
 import StoryCard from "../components/StoryCard/StoryCard";
@@ -8,9 +15,13 @@ import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 import { HNStory } from "../types";
 
+type SortOrder = "latest" | "oldest";
+
 export default function ShowPage() {
   const [params] = useSearchParams();
   const query = (params.get("q") ?? "").trim().toLowerCase();
+
+  const [sort, setSort] = React.useState<SortOrder>("latest");
 
   const {
     data,
@@ -35,11 +46,23 @@ export default function ShowPage() {
     });
   }, [stories, query]);
 
+  const visibleStories = React.useMemo(() => {
+    if (sort === "latest") return filteredStories;
+
+    // Oldest first (based on HN "time" unix timestamp)
+    return [...filteredStories].sort((a, b) => {
+      const ta = a.time ?? 0;
+      const tb = b.time ?? 0;
+      return ta - tb;
+    });
+  }, [filteredStories, sort]);
+
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [activeStory, setActiveStory] = React.useState<HNStory | null>(null);
 
   const openComments = React.useCallback(
     (storyId: number) => {
+      // Use the full loaded list so comments works even with filters/sort
       const story = stories.find((s) => s.id === storyId) ?? null;
       setActiveStory(story);
       setCommentsOpen(true);
@@ -74,9 +97,32 @@ export default function ShowPage() {
   return (
     <Container maxWidth={false} disableGutters>
       <Box sx={{ px: { xs: 2, md: 3 }, py: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, mb: 2 }}>
-          Show HN
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+            flexDirection: { xs: "column", sm: "row" },
+            mb: 2,
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>
+            Show HN
+          </Typography>
+
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={sort}
+            onChange={(_, next) => {
+              if (next) setSort(next);
+            }}
+          >
+            <ToggleButton value="latest">Latest</ToggleButton>
+            <ToggleButton value="oldest">Oldest</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
 
         {/* Info banner */}
         <Box
@@ -129,7 +175,7 @@ export default function ShowPage() {
 
         {!isLoading && !isError && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {filteredStories.map((story, i) => (
+            {visibleStories.map((story, i) => (
               <StoryCard
                 key={story.id}
                 story={story}
