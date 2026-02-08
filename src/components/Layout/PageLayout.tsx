@@ -22,8 +22,10 @@ export default function PageLayout({
       <Box
         sx={{
           width: "100%",
+          maxWidth: "100%",
           px: { xs: 1, sm: 2, md: 3 },
-          py: { xs: 2, md: 3 },
+          py: { xs: 1.5, md: 3 },
+          overflowX: "hidden",
         }}
       >
         {children}

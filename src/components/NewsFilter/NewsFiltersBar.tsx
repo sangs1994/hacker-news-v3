@@ -95,7 +95,11 @@ export default function BlogFiltersBar({
 
   return (
     <Box sx={{ px: 1.5, py: 1 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        alignItems="center"
+        justifyContent="space-between"
+      >
         {/* LEFT: underline tabs */}
         <Tabs
           value={feedKind}
@@ -108,7 +112,8 @@ export default function BlogFiltersBar({
               minHeight: 32,
               padding: "6px 12px",
               textTransform: "none",
-              fontWeight: 500,
+              px: { xs: 1.25, sm: 2 },
+              fontSize: { xs: 13, sm: 14 },
             },
           }}
         >
