@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Header from "./Header";
+import { useLocation } from "react-router-dom";
 
 const mockNavigate = jest.fn();
 
@@ -15,8 +16,6 @@ jest.mock("react-router-dom", () => {
     useLocation: jest.fn(),
   };
 });
-
-import { useLocation } from "react-router-dom";
 
 describe("Header", () => {
   beforeEach(() => {
