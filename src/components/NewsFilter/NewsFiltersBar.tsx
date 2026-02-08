@@ -30,6 +30,7 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
+// Local YYYY-MM-DD
 function toYYYYMMDD(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
@@ -55,7 +56,7 @@ function clampToToday(d: Date) {
   return x.getTime() > today.getTime() ? today : x;
 }
 
-export default function NewsFilterBar({
+export default function BlogFiltersBar({
   feedKind,
   search,
   selectedDate,
@@ -116,7 +117,7 @@ export default function NewsFilterBar({
           <Tab label="Best" value="best" />
         </Tabs>
 
-        {/* MIDDLE: date controls only for TOP */}
+        {/* CENTER: date controls ONLY for TOP (otherwise keep a spacer so layout stays stable) */}
         {isTop ? (
           <Stack direction="row" spacing={1} alignItems="center">
             <IconButton
@@ -214,24 +215,21 @@ export default function NewsFilterBar({
             </IconButton>
           </Stack>
         ) : (
-          <Box />
+          // Spacer keeps search aligned even when date controls are hidden
+          <Box sx={{ width: 36 + 230 + 36 + 16 /* icons+field+gap */ }} />
         )}
 
-        {/* RIGHT: search only for TOP */}
-        {isTop ? (
-          <TextField
-            size="small"
-            placeholder="Search title…"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            sx={{
-              width: 260,
-              "& .MuiOutlinedInput-root": { borderRadius: 2, height: 36 },
-            }}
-          />
-        ) : (
-          <Box />
-        )}
+        {/* RIGHT: search for ALL tabs */}
+        <TextField
+          size="small"
+          placeholder="Search title…"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          sx={{
+            width: 260,
+            "& .MuiOutlinedInput-root": { borderRadius: 2, height: 36 },
+          }}
+        />
       </Stack>
     </Box>
   );

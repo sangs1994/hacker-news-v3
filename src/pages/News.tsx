@@ -3,7 +3,7 @@ import { Box, Stack, Typography } from "@mui/material";
 
 import type { FeedKind, HNStory } from "../types";
 
-import NewsFiltersBar from "../components/NewsFilter/NewsFiltersBar";
+import BlogFiltersBar from "../components/NewsFilter/NewsFiltersBar";
 import StoryCard from "../components/StoryCard/StoryCard";
 import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
@@ -67,29 +67,31 @@ export default function News() {
     [stories],
   );
 
-  /** Filter logic:
-   * - TOP: filter up to selected date + search
-   * - NEW/BEST: no date filter, no search filter
+  /**
+   * Filtering:
+   * - Search applies to ALL tabs
+   * - Date filter applies ONLY to TOP
    */
   const filteredStories = React.useMemo(() => {
-    if (!isTop) return stories;
-
     const q = search.trim().toLowerCase();
 
-    const end = new Date(selectedDate);
-    end.setHours(23, 59, 59, 999);
-    const endMs = end.getTime();
+    const base = isTop
+      ? (() => {
+          const end = new Date(selectedDate);
+          end.setHours(23, 59, 59, 999);
+          const endMs = end.getTime();
 
-    return stories
-      .filter((s: any) => {
-        const ms = getStoryTimeMs(s);
-        if (ms == null) return true;
-        return ms <= endMs;
-      })
-      .filter((s: any) => {
-        if (!q) return true;
-        return (s?.title ?? "").toLowerCase().includes(q);
-      });
+          return stories.filter((s: any) => {
+            const ms = getStoryTimeMs(s);
+            if (ms == null) return true;
+            return ms <= endMs;
+          });
+        })()
+      : stories;
+
+    if (!q) return base;
+
+    return base.filter((s: any) => (s?.title ?? "").toLowerCase().includes(q));
   }, [stories, isTop, selectedDate, search]);
 
   // ============================
@@ -116,13 +118,9 @@ export default function News() {
     (async () => {
       try {
         const MAX_PAGES = 30;
+
         for (let i = 0; i < MAX_PAGES; i++) {
           if (cancelled) return;
-
-          const alreadyOk = hasAnyStoryAtOrBeforeDate(stories as any[], endMs);
-          if (alreadyOk) return;
-
-          if (!hasNextPage) return;
 
           const result = await fetchNextPage();
           const nextStories =
@@ -151,7 +149,7 @@ export default function News() {
   }, [isTop, selectedDate, feedKind]);
 
   // ============================
-  // ✅ Infinite scroll (IntersectionObserver) for all feeds
+  // ✅ Infinite scroll for ALL tabs
   // ============================
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -180,16 +178,11 @@ export default function News() {
   return (
     <Box sx={{ px: { xs: 2, md: 3 }, py: 2 }}>
       <Stack spacing={2}>
-        <NewsFiltersBar
+        <BlogFiltersBar
           feedKind={feedKind}
           search={search}
           selectedDate={selectedDate}
-          onFeedKindChange={(k) => {
-            setFeedKind(k);
-
-            // clear search when leaving TOP (since it’s disabled)
-            if (k !== "top") setSearch("");
-          }}
+          onFeedKindChange={setFeedKind}
           onSearchChange={setSearch}
           onSelectedDateChange={setSelectedDate}
         />
