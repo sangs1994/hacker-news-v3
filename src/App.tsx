@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { CssBaseline, Box } from "@mui/material";
 
 import PageLayout from "./components/Layout/PageLayout";
@@ -10,7 +10,7 @@ import Header from "./components/Header/Header";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <CssBaseline />
 
       {/* Full-width wrapper to avoid any inherited margins/padding */}
@@ -26,7 +26,7 @@ function App() {
           </Routes>
         </PageLayout>
       </Box>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
