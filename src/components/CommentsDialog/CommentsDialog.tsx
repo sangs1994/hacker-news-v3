@@ -41,7 +41,6 @@ export default function CommentsDialog({
       fullScreen={isMobile}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: isMobile ? 0 : 3 } }}
     >
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
