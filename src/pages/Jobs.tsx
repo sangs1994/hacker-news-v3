@@ -139,16 +139,8 @@ export default function JobsPage() {
         }}
       >
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Browse Hacker News job listings{" "}
-          <Link
-            href="https://news.ycombinator.com/jobs"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-          >
-            here
-          </Link>
-          . (Some job posts may not have comments.)
+          Browse Hacker News job listings here . (Some job posts may not have
+          comments.)
         </Typography>
       </Box>
 

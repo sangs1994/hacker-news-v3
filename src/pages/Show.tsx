@@ -14,6 +14,7 @@ import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 import { HNStory } from "../types";
+import ShowHNRulesDialog from "../components/ShowHNRules/ShowHNRules";
 
 type SortOrder = "latest" | "oldest";
 
@@ -22,6 +23,7 @@ export default function ShowPage() {
   const query = (params.get("q") ?? "").trim().toLowerCase();
 
   const [sort, setSort] = React.useState<SortOrder>("latest");
+  const [rulesOpen, setRulesOpen] = React.useState(false);
 
   const {
     data,
@@ -139,10 +141,13 @@ export default function ShowPage() {
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             Please read the{" "}
             <Link
-              href="https://news.ycombinator.com/showhn.html"
-              target="_blank"
-              rel="noopener noreferrer"
+              component="button"
               underline="hover"
+              sx={{ fontWeight: 600 }}
+              onClick={(e) => {
+                e.preventDefault();
+                setRulesOpen(true);
+              }}
             >
               Show HN rules and tips
             </Link>{" "}
@@ -195,6 +200,10 @@ export default function ShowPage() {
           open={commentsOpen}
           story={activeStory}
           onClose={closeComments}
+        />
+        <ShowHNRulesDialog
+          open={rulesOpen}
+          onClose={() => setRulesOpen(false)}
         />
       </Box>
     </Container>

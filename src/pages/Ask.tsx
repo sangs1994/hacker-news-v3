@@ -135,17 +135,8 @@ export default function AskPage() {
         }}
       >
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Ask HN is for questions to the Hacker News community. Browse the
-          latest Ask HN posts{" "}
-          <Link
-            href="https://news.ycombinator.com/ask"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-          >
-            here
-          </Link>
-          .
+          Ask HN is for questions to the Hacker News community. The community
+          can answer and discuss in the thread.
         </Typography>
       </Box>
 
