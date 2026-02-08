@@ -1,179 +1,235 @@
-// src/pages/News.tsx
 import * as React from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 
-import type { FeedKind, TimeRange, HNStory } from "../types/index";
+import type { FeedKind, HNStory } from "../types";
 
-import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
+import NewsFiltersBar from "../components/NewsFilter/NewsFiltersBar";
 import StoryCard from "../components/StoryCard/StoryCard";
 import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
-import { withinRange } from "../utils/filters";
 import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 
-function formatDateLabel(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+/** HN Firebase: time = unix seconds */
+function getStoryTimeMs(story: any): number | null {
+  const t = story?.time;
+  return typeof t === "number" ? t * 1000 : null;
 }
 
-function addDays(base: Date, delta: number): Date {
-  const d = new Date(base);
-  d.setDate(d.getDate() + delta);
-  return d;
+function getStoryIdNumber(story: any, fallbackIndex: number) {
+  const raw = story?.id;
+  const n = typeof raw === "number" ? raw : Number(raw);
+  return Number.isFinite(n) ? n : fallbackIndex;
 }
 
-export default function NewsPage() {
+function hasAnyStoryAtOrBeforeDate(stories: any[], endMs: number) {
+  for (const s of stories) {
+    const ms = getStoryTimeMs(s);
+    if (ms != null && ms <= endMs) return true;
+  }
+  return false;
+}
+
+export default function News() {
   const [feedKind, setFeedKind] = React.useState<FeedKind>("top");
-  const [range, setRange] = React.useState<TimeRange>("1d");
   const [search, setSearch] = React.useState("");
+  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
 
-  const [activeDate, setActiveDate] = React.useState<Date>(() => new Date());
-  const dateLabel = React.useMemo(
-    () => formatDateLabel(activeDate),
-    [activeDate],
-  );
-
-  const feedQuery = useStoriesInfinite(feedKind);
-
-  const stories: HNStory[] = React.useMemo(() => {
-    const pages = feedQuery.data?.pages ?? [];
-    return pages.flatMap((p) => p.stories ?? []);
-  }, [feedQuery.data]);
-
-  const filteredStories: HNStory[] = React.useMemo(() => {
-    const q = search.trim().toLowerCase();
-
-    return stories.filter((s) => {
-      if (!withinRange(s.time, range)) return false;
-      if (!q) return true;
-
-      const title = (s.title ?? "").toLowerCase();
-      const url = (s.url ?? "").toLowerCase();
-      return title.includes(q) || url.includes(q);
-    });
-  }, [stories, range, search]);
+  const isTop = feedKind === "top";
 
   const [commentsOpen, setCommentsOpen] = React.useState(false);
-  const [activeStory, setActiveStory] = React.useState<HNStory | null>(null);
-
-  const onOpenComments = React.useCallback(
-    (storyId: number) => {
-      const found = filteredStories.find((s) => s.id === storyId) ?? null;
-      setActiveStory(found);
-      setCommentsOpen(true);
-    },
-    [filteredStories],
+  const [selectedStory, setSelectedStory] = React.useState<HNStory | null>(
+    null,
   );
 
   const onCloseComments = React.useCallback(() => {
     setCommentsOpen(false);
-    setActiveStory(null);
+    setSelectedStory(null);
   }, []);
 
+  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
+    useStoriesInfinite(feedKind);
+
+  /** Flatten pages -> stories */
+  const stories: HNStory[] = React.useMemo(() => {
+    const pages = data?.pages ?? [];
+    return pages.flatMap((p: any) => p?.stories ?? []);
+  }, [data]);
+
+  /** StoryCard expects (storyId: number) => void */
+  const onOpenComments = React.useCallback(
+    (storyId: number) => {
+      const story =
+        stories.find((s) => getStoryIdNumber(s, -1) === storyId) ?? null;
+      setSelectedStory(story);
+      setCommentsOpen(true);
+    },
+    [stories],
+  );
+
+  /** Filter logic:
+   * - TOP: filter up to selected date + search
+   * - NEW/BEST: no date filter, no search filter
+   */
+  const filteredStories = React.useMemo(() => {
+    if (!isTop) return stories;
+
+    const q = search.trim().toLowerCase();
+
+    const end = new Date(selectedDate);
+    end.setHours(23, 59, 59, 999);
+    const endMs = end.getTime();
+
+    return stories
+      .filter((s: any) => {
+        const ms = getStoryTimeMs(s);
+        if (ms == null) return true;
+        return ms <= endMs;
+      })
+      .filter((s: any) => {
+        if (!q) return true;
+        return (s?.title ?? "").toLowerCase().includes(q);
+      });
+  }, [stories, isTop, selectedDate, search]);
+
+  // ============================
+  // ✅ Auto-fetch older pages ONLY for TOP when past date selected
+  // ============================
+  const prefetchLockRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isTop) return;
+    if (isLoading) return;
+    if (!hasNextPage) return;
+
+    const end = new Date(selectedDate);
+    end.setHours(23, 59, 59, 999);
+    const endMs = end.getTime();
+
+    if (hasAnyStoryAtOrBeforeDate(stories as any[], endMs)) return;
+
+    if (prefetchLockRef.current) return;
+    prefetchLockRef.current = true;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const MAX_PAGES = 30;
+        for (let i = 0; i < MAX_PAGES; i++) {
+          if (cancelled) return;
+
+          const alreadyOk = hasAnyStoryAtOrBeforeDate(stories as any[], endMs);
+          if (alreadyOk) return;
+
+          if (!hasNextPage) return;
+
+          const result = await fetchNextPage();
+          const nextStories =
+            result?.data?.pages?.flatMap((p: any) => p?.stories ?? []) ?? [];
+
+          if (hasAnyStoryAtOrBeforeDate(nextStories, endMs)) return;
+
+          if (
+            result &&
+            "hasNextPage" in result &&
+            (result as any).hasNextPage === false
+          ) {
+            return;
+          }
+        }
+      } finally {
+        prefetchLockRef.current = false;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      prefetchLockRef.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTop, selectedDate, feedKind]);
+
+  // ============================
+  // ✅ Infinite scroll (IntersectionObserver) for all feeds
+  // ============================
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return;
-    if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage) return;
+    const el = sentinelRef.current;
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) feedQuery.fetchNextPage();
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
       },
-      { root: null, rootMargin: "400px", threshold: 0 },
+      { rootMargin: "300px" },
     );
 
-    observer.observe(node);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [
-    feedQuery.hasNextPage,
-    feedQuery.isFetchingNextPage,
-    feedQuery.fetchNextPage,
-  ]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const showEmpty =
+    !isLoading &&
+    filteredStories.length === 0 &&
+    (!isTop || (!hasNextPage && !isFetchingNextPage));
 
   return (
-    // ✅ Break out of any parent maxWidth/container
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: "none !important",
-        overflowX: "hidden",
-      }}
-    >
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "none !important",
-          px: { xs: 1, sm: 2 },
-          pb: { xs: 2, md: 3 },
-          boxSizing: "border-box",
-        }}
-      >
-        <Box sx={{ mt: { xs: 1.5, sm: 2.5, md: 3 }, mb: 2 }}>
-          <BlogFiltersBar
-            feedKind={feedKind}
-            onFeedKindChange={setFeedKind}
-            search={search}
-            onSearchChange={setSearch}
-            range={range}
-            onRangeChange={setRange}
-            dateLabel={dateLabel}
-            onPrevDate={() => setActiveDate((d) => addDays(d, -1))}
-            onNextDate={() => setActiveDate((d) => addDays(d, 1))}
-          />
-        </Box>
+    <Box sx={{ px: { xs: 2, md: 3 }, py: 2 }}>
+      <Stack spacing={2}>
+        <NewsFiltersBar
+          feedKind={feedKind}
+          search={search}
+          selectedDate={selectedDate}
+          onFeedKindChange={(k) => {
+            setFeedKind(k);
 
-        {feedQuery.isLoading && <StoriesSkeleton />}
+            // clear search when leaving TOP (since it’s disabled)
+            if (k !== "top") setSearch("");
+          }}
+          onSearchChange={setSearch}
+          onSelectedDateChange={setSelectedDate}
+        />
 
-        {!feedQuery.isLoading && feedQuery.isError && (
-          <Box sx={{ p: 2 }}>
-            <Typography color="error" fontWeight={700}>
-              Failed to load stories
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {feedQuery.error instanceof Error
-                ? feedQuery.error.message
-                : "Please try again."}
-            </Typography>
-          </Box>
-        )}
-
-        {!feedQuery.isLoading && !feedQuery.isError && (
-          <Box
-            sx={{
-              display: "grid",
-              gap: { xs: 1, sm: 1.25 },
-              pb: 2,
-              width: "100%",
-            }}
-          >
-            {filteredStories.map((story, i) => (
+        {isLoading ? (
+          <StoriesSkeleton />
+        ) : showEmpty ? (
+          <Typography sx={{ textAlign: "center", opacity: 0.8, mt: 4 }}>
+            No stories found.
+          </Typography>
+        ) : filteredStories.length === 0 && isTop ? (
+          <Typography sx={{ textAlign: "center", opacity: 0.8, mt: 4 }}>
+            Loading older stories…
+          </Typography>
+        ) : (
+          <Stack spacing={1.5}>
+            {filteredStories.map((story: any, index: number) => (
               <StoryCard
-                key={story.id}
+                key={getStoryIdNumber(story, index)}
                 story={story}
-                index={i + 1}
+                index={index}
                 onOpenComments={onOpenComments}
               />
             ))}
+            <div ref={sentinelRef} />
+          </Stack>
+        )}
 
-            {feedQuery.hasNextPage && (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                {feedQuery.isFetchingNextPage ? (
-                  <CircularProgress size={24} />
-                ) : null}
-                <div ref={sentinelRef} />
-              </Box>
-            )}
-          </Box>
+        {isFetchingNextPage && (
+          <Typography sx={{ textAlign: "center", opacity: 0.6 }}>
+            Loading more…
+          </Typography>
         )}
 
         <CommentsDialog
           open={commentsOpen}
-          story={activeStory}
+          story={selectedStory}
           onClose={onCloseComments}
         />
-      </Box>
+      </Stack>
     </Box>
   );
 }
