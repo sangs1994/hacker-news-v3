@@ -1,5 +1,7 @@
+// src/features/news/components/BlogFiltersBar.tsx
 import * as React from "react";
 import {
+  Box,
   Stack,
   Tabs,
   Tab,
@@ -7,8 +9,14 @@ import {
   ToggleButtonGroup,
   TextField,
   InputAdornment,
+  IconButton,
+  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import type { FeedKind, TimeRange } from "../../../types/index";
 
 type Props = {
@@ -20,6 +28,11 @@ type Props = {
 
   range: TimeRange;
   onRangeChange: (value: TimeRange) => void;
+
+  dateLabel: string;
+  onPrevDate: () => void;
+  onNextDate: () => void;
+  onDateClick?: () => void;
 };
 
 export default function BlogFiltersBar({
@@ -29,69 +42,151 @@ export default function BlogFiltersBar({
   onSearchChange,
   range,
   onRangeChange,
+  dateLabel,
+  onPrevDate,
+  onNextDate,
+  onDateClick,
 }: Props) {
   return (
-    <Stack
-      direction={{ xs: "column", sm: "row" }}
-      spacing={1.5}
-      alignItems={{ xs: "stretch", sm: "center" }}
-      sx={{ mb: 2 }}
+    <Box
+      sx={{
+        width: "100%",
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 3,
+        bgcolor: "background.paper",
+        p: { xs: 1.25, sm: 1.5 },
+      }}
     >
-      <Tabs
-        value={feedKind}
-        onChange={(_, v) => onFeedKindChange(v)}
-        sx={{
-          minHeight: 40,
-          "& .MuiTab-root": {
+      <Stack spacing={1.25}>
+        {/* Tabs */}
+        <Tabs
+          value={feedKind}
+          onChange={(_, v) => onFeedKindChange(v)}
+          variant="fullWidth"
+          sx={{
             minHeight: 40,
-            textTransform: "none",
-            fontWeight: 700,
-          },
-        }}
-      >
-        <Tab value="new" label="New" />
-        <Tab value="top" label="Top" />
-      </Tabs>
+            "& .MuiTabs-indicator": { height: 3, borderRadius: 2 },
+            "& .MuiTab-root": {
+              minHeight: 40,
+              textTransform: "none",
+              fontWeight: 800,
+            },
+          }}
+        >
+          <Tab value="top" label="Top" />
+          <Tab value="new" label="New" />
+        </Tabs>
 
-      <TextField
-        size="small"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Search blog…"
-        sx={{ flex: 1, maxWidth: { xs: "100%", sm: 320 } }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-      />
+        {/* Date controls */}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <IconButton
+            onClick={onPrevDate}
+            aria-label="Previous day"
+            size="small"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              flex: "0 0 auto",
+            }}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
 
-      <ToggleButtonGroup
-        value={range}
-        exclusive
-        onChange={(_, v) => v && onRangeChange(v)}
-        size="small"
-        sx={{
-          gap: 1,
-          "& .MuiToggleButtonGroup-grouped": {
-            border: "1px solid #e0e0e0",
-            borderRadius: 8,
-            ml: "0 !important", // remove MUI default margin collapse
-          },
-          "& .MuiToggleButton-root": {
-            textTransform: "none",
-            borderRadius: 8,
-            px: 1.5,
-            fontWeight: 700,
-          },
-        }}
-      >
-        <ToggleButton value="1d">1 day</ToggleButton>
-        <ToggleButton value="1m">1 month</ToggleButton>
-        <ToggleButton value="1y">1 year</ToggleButton>
-      </ToggleButtonGroup>
-    </Stack>
+          <Button
+            onClick={onDateClick}
+            variant="outlined"
+            startIcon={<CalendarTodayOutlinedIcon fontSize="small" />}
+            endIcon={<KeyboardArrowDownIcon />}
+            sx={{
+              height: 40,
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 800,
+              borderColor: "divider",
+              flex: 1,
+              justifyContent: "space-between",
+              px: 1.25,
+              minWidth: 0,
+            }}
+          >
+            {dateLabel}
+          </Button>
+
+          <IconButton
+            onClick={onNextDate}
+            aria-label="Next day"
+            size="small"
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              flex: "0 0 auto",
+            }}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </Stack>
+
+        {/* Search */}
+        <TextField
+          size="small"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search titles or domains..."
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 3,
+              height: 40,
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {/* Range pills */}
+        <ToggleButtonGroup
+          value={range}
+          exclusive
+          onChange={(_, v) => v && onRangeChange(v)}
+          size="small"
+          sx={{
+            width: "100%",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 1,
+            "& .MuiToggleButtonGroup-grouped": {
+              ml: "0 !important",
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              height: 40,
+              fontWeight: 800,
+              textTransform: "none",
+              width: "100%",
+            },
+            "& .MuiToggleButton-root.Mui-selected": {
+              bgcolor: "primary.50",
+              borderColor: "primary.200",
+            },
+          }}
+        >
+          <ToggleButton value="1d">1 DAY</ToggleButton>
+          <ToggleButton value="1m">1 MONTH</ToggleButton>
+          <ToggleButton value="1y">1 YEAR</ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+    </Box>
   );
 }

@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getItem, getStoryIds } from "../api/queries";
+import { getItem, getStoryIds } from "../services/queries";
 import { HNStory } from "../types";
 import { FeedKind } from "../types";
 

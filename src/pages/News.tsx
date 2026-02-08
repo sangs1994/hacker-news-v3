@@ -1,109 +1,116 @@
+// src/pages/News.tsx
 import * as React from "react";
-import { Box, Stack, Typography, useMediaQuery } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { Box, CircularProgress, Typography } from "@mui/material";
 
 import type { FeedKind, TimeRange, HNStory } from "../types/index";
-import { withinRange } from "../utils/filters";
 
 import BlogFiltersBar from "../features/news/components/BlogFiltersBar";
 import StoryCard from "../components/StoryCard/StoryCard";
-import BestPicks from "../features/news/components/BestPicks";
 import CommentsDialog from "../components/CommentsDialog/CommentsDialog";
 import { StoriesSkeleton } from "../components/StoryCard/StoryCardSkeleton";
 
-import { useBestPicks } from "../hooks/useBestPicks";
+import { withinRange } from "../utils/filters";
 import { useStoriesInfinite } from "../hooks/useStoriesInfinite";
 
-export default function NewsPage() {
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+function formatDateLabel(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
 
-  const [feedKind, setFeedKind] = React.useState<FeedKind>("new");
+function addDays(base: Date, delta: number): Date {
+  const d = new Date(base);
+  d.setDate(d.getDate() + delta);
+  return d;
+}
+
+export default function NewsPage() {
+  const [feedKind, setFeedKind] = React.useState<FeedKind>("top");
   const [range, setRange] = React.useState<TimeRange>("1d");
   const [search, setSearch] = React.useState("");
+
+  const [activeDate, setActiveDate] = React.useState<Date>(() => new Date());
+  const dateLabel = React.useMemo(
+    () => formatDateLabel(activeDate),
+    [activeDate],
+  );
+
+  const feedQuery = useStoriesInfinite(feedKind);
+
+  const stories: HNStory[] = React.useMemo(() => {
+    const pages = feedQuery.data?.pages ?? [];
+    return pages.flatMap((p) => p.stories ?? []);
+  }, [feedQuery.data]);
+
+  const filteredStories: HNStory[] = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return stories.filter((s) => {
+      if (!withinRange(s.time, range)) return false;
+      if (!q) return true;
+
+      const title = (s.title ?? "").toLowerCase();
+      const url = (s.url ?? "").toLowerCase();
+      return title.includes(q) || url.includes(q);
+    });
+  }, [stories, range, search]);
 
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [activeStory, setActiveStory] = React.useState<HNStory | null>(null);
 
-  const storiesQuery = useStoriesInfinite(feedKind);
-  const bestPicksQuery = useBestPicks();
-
-  // ✅ flatten infinite pages into a single list
-  const allStories = React.useMemo<HNStory[]>(() => {
-    return storiesQuery.data?.pages.flatMap((p) => p.stories) ?? [];
-  }, [storiesQuery.data]);
-
-  const filteredStories = React.useMemo(() => {
-    const q = search.trim().toLowerCase();
-
-    return allStories
-      .filter((s) => withinRange(s.time, range))
-      .filter((s) => (q ? s.title.toLowerCase().includes(q) : true));
-  }, [allStories, range, search]);
-
-  const openComments = React.useCallback(
+  const onOpenComments = React.useCallback(
     (storyId: number) => {
-      const story = allStories.find((s) => s.id === storyId) ?? null;
-      setActiveStory(story);
+      const found = filteredStories.find((s) => s.id === storyId) ?? null;
+      setActiveStory(found);
       setCommentsOpen(true);
     },
-    [allStories],
+    [filteredStories],
   );
 
-  const closeComments = React.useCallback(() => {
+  const onCloseComments = React.useCallback(() => {
     setCommentsOpen(false);
     setActiveStory(null);
   }, []);
 
-  // ✅ sentinel for infinite scroll (same behavior as Show)
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage) return;
 
-    const io = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          storiesQuery.hasNextPage &&
-          !storiesQuery.isFetchingNextPage
-        ) {
-          storiesQuery.fetchNextPage();
-        }
+        if (entries[0]?.isIntersecting) feedQuery.fetchNextPage();
       },
-      { rootMargin: "600px" },
+      { root: null, rootMargin: "400px", threshold: 0 },
     );
 
-    io.observe(el);
-    return () => io.disconnect();
+    observer.observe(node);
+    return () => observer.disconnect();
   }, [
-    storiesQuery.fetchNextPage,
-    storiesQuery.hasNextPage,
-    storiesQuery.isFetchingNextPage,
+    feedQuery.hasNextPage,
+    feedQuery.isFetchingNextPage,
+    feedQuery.fetchNextPage,
   ]);
 
   return (
+    // ✅ Break out of any parent maxWidth/container
     <Box
       sx={{
         width: "100%",
-        bgcolor: "background.paper",
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 3,
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
-        boxSizing: "border-box",
-        mt: 3,
+        maxWidth: "none !important",
+        overflowX: "hidden",
       }}
     >
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={3}
-        alignItems="flex-start"
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: "none !important",
+          px: { xs: 1, sm: 2 },
+          pb: { xs: 2, md: 3 },
+          boxSizing: "border-box",
+        }}
       >
-        {/* LEFT FEED */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ mt: { xs: 1.5, sm: 2.5, md: 3 }, mb: 2 }}>
           <BlogFiltersBar
             feedKind={feedKind}
             onFeedKindChange={setFeedKind}
@@ -111,55 +118,62 @@ export default function NewsPage() {
             onSearchChange={setSearch}
             range={range}
             onRangeChange={setRange}
+            dateLabel={dateLabel}
+            onPrevDate={() => setActiveDate((d) => addDays(d, -1))}
+            onNextDate={() => setActiveDate((d) => addDays(d, 1))}
           />
-
-          {storiesQuery.isLoading && <StoriesSkeleton count={5} />}
-
-          {storiesQuery.isError && (
-            <Typography color="error">Failed to load stories.</Typography>
-          )}
-
-          {!storiesQuery.isLoading && !storiesQuery.isError && (
-            <Stack spacing={1.5}>
-              {filteredStories.map((story, i) => (
-                <StoryCard
-                  key={story.id}
-                  story={story}
-                  index={i + 1}
-                  onOpenComments={openComments}
-                />
-              ))}
-
-              {filteredStories.length === 0 && (
-                <Typography color="text.secondary">
-                  No results for your filters/search.
-                </Typography>
-              )}
-
-              {/* ✅ sentinel */}
-              <div ref={sentinelRef} />
-
-              {/* ✅ loading more */}
-              {storiesQuery.isFetchingNextPage && <StoriesSkeleton count={3} />}
-            </Stack>
-          )}
         </Box>
 
-        {/* RIGHT BEST PICKS (desktop only) */}
-        {isDesktop && (
-          <BestPicks
-            isLoading={bestPicksQuery.isLoading}
-            isError={bestPicksQuery.isError}
-            data={bestPicksQuery.data}
-          />
-        )}
-      </Stack>
+        {feedQuery.isLoading && <StoriesSkeleton />}
 
-      <CommentsDialog
-        open={commentsOpen}
-        story={activeStory}
-        onClose={closeComments}
-      />
+        {!feedQuery.isLoading && feedQuery.isError && (
+          <Box sx={{ p: 2 }}>
+            <Typography color="error" fontWeight={700}>
+              Failed to load stories
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {feedQuery.error instanceof Error
+                ? feedQuery.error.message
+                : "Please try again."}
+            </Typography>
+          </Box>
+        )}
+
+        {!feedQuery.isLoading && !feedQuery.isError && (
+          <Box
+            sx={{
+              display: "grid",
+              gap: { xs: 1, sm: 1.25 },
+              pb: 2,
+              width: "100%",
+            }}
+          >
+            {filteredStories.map((story, i) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                index={i + 1}
+                onOpenComments={onOpenComments}
+              />
+            ))}
+
+            {feedQuery.hasNextPage && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                {feedQuery.isFetchingNextPage ? (
+                  <CircularProgress size={24} />
+                ) : null}
+                <div ref={sentinelRef} />
+              </Box>
+            )}
+          </Box>
+        )}
+
+        <CommentsDialog
+          open={commentsOpen}
+          story={activeStory}
+          onClose={onCloseComments}
+        />
+      </Box>
     </Box>
   );
 }

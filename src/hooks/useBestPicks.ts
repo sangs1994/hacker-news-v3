@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getBestPicks } from "../api/queries";
+import { getBestPicks } from "../services/queries";
 
 /**
  * Replace getBestPicks with your own "Best Picks API" call.

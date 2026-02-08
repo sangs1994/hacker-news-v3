@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTopLevelComments } from "../api/queries";
+import { getTopLevelComments } from "../services/queries";
 
 export function useComments(storyId: number | null, open: boolean) {
   return useQuery({
