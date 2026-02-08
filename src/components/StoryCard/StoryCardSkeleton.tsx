@@ -18,12 +18,6 @@ export function StoriesSkeleton({ count = 5 }: { count?: number }) {
                 sx={{ mt: 1 }}
               />
             </Stack>
-            <Skeleton
-              variant="rounded"
-              width={150}
-              height={86}
-              sx={{ borderRadius: 2 }}
-            />
           </CardContent>
         </Card>
       ))}
