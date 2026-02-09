@@ -8,7 +8,7 @@ https://sangs1994.github.io/hacker-news-v3/
 # Figma Design
 https://www.figma.com/design/U22BuMgo20qGB9cKOjwEDx/Hacker-Rank-Revamp?node-id=0-1&p=f&t=LEhxkYYevvdkRuR2-0
 
-#UT Coverage 
+# UT Coverage 
 <img width="912" height="102" alt="image" src="https://github.com/user-attachments/assets/d22cda73-d291-4ef1-a03c-59841680ff08" />
 
 
