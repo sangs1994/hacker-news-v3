@@ -1,7 +1,7 @@
 import * as React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import NewsFiltersBar from "./NewsFiltersBar";
+import NewsFiltersBar from "../NewsFiltersBar";
 
 function atMidnight(d: Date) {
   const x = new Date(d);

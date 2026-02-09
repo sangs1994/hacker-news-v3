@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import Header from "./Header";
+import Header from "../Header";
 import { useLocation } from "react-router-dom";
 
 const mockNavigate = jest.fn();

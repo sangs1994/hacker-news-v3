@@ -94,9 +94,6 @@ export default function News() {
     return base.filter((s: any) => (s?.title ?? "").toLowerCase().includes(q));
   }, [stories, isTop, selectedDate, search]);
 
-  // ============================
-  // ✅ Auto-fetch older pages ONLY for TOP when past date selected
-  // ============================
   const prefetchLockRef = React.useRef(false);
 
   React.useEffect(() => {
@@ -148,9 +145,6 @@ export default function News() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTop, selectedDate, feedKind]);
 
-  // ============================
-  // ✅ Infinite scroll for ALL tabs
-  // ============================
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
