@@ -4,24 +4,6 @@ import userEvent from "@testing-library/user-event";
 import News from "../News";
 import { useStoriesInfinite } from "../../hooks/useStoriesInfinite";
 
-class MockIntersectionObserver {
-  callback: IntersectionObserverCallback;
-
-  constructor(callback: IntersectionObserverCallback) {
-    this.callback = callback;
-  }
-
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-Object.defineProperty(global, "IntersectionObserver", {
-  writable: true,
-  configurable: true,
-  value: MockIntersectionObserver,
-});
-
 jest.mock("../../hooks/useStoriesInfinite", () => ({
   useStoriesInfinite: jest.fn(),
 }));
